@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -18,6 +19,7 @@ import javafx.stage.Stage;
 import java.util.ArrayList;
 
 public class Main extends Application {
+    static int totalScore = 0;
     static ArrayList<Integer> diceValues = new ArrayList<>();
     public static int getScore() {
         int[] numberCount = new int[6];
@@ -26,9 +28,6 @@ public class Main extends Application {
             numberCount[val - 1] += 1;
         }
         int score = 0;
-        System.out.println("---=-=-=-=-==-");
-        for (int n : numberCount)
-            System.out.println(n);
         for (int i = 0; i < 6; i++) {
             int val = numberCount[i];
             score += (val / 2) * 2 * (i + 1);
@@ -64,7 +63,7 @@ public class Main extends Application {
         return innerRow;
     }
     public static final String DICE_PANEL_ID = "OUTER_DICES___ID";
-    public static VBox generateOutput(int diceCount) {
+    public static VBox generateOutput(int diceCount, VBox root) {
         diceValues.clear();
         int dicesPerRow = diceCount / 2;
         FlowPane inner1 = generateOutputGetInner(dicesPerRow);
@@ -72,11 +71,25 @@ public class Main extends Application {
         FlowPane outer = new FlowPane(inner1, inner2);
         outer.setOrientation(Orientation.VERTICAL);
         outer.setVgap(10d);
-        Label score = new Label("Wynik: " + getScore());
-        VBox dicesWithScore = new VBox(outer, score);
+        totalScore += getScore();
+        Label score = new Label("Wynik: " + totalScore);
+        Button resetButton = new Button("Resetuj wynik");
+        resetButton.addEventHandler(MouseEvent.MOUSE_CLICKED, _ -> {
+            totalScore = 0;
+            removeDices(root);
+            VBox emptyOutput = generateOutput(0, root);
+            root.getChildren().add(emptyOutput);
+        });
+        HBox scorePanel = new HBox(score, resetButton);
+        scorePanel.setSpacing(15);
+        VBox dicesWithScore = new VBox(outer, scorePanel);
+        scorePanel.setAlignment(Pos.CENTER_LEFT);
         dicesWithScore.setSpacing(10d);
         dicesWithScore.setId(DICE_PANEL_ID);
         return dicesWithScore;
+    }
+    public static void removeDices(VBox root) {
+        root.getChildren().removeIf(child -> child.getId() != null && child.getId().equals(DICE_PANEL_ID));
     }
     @Override
     public void start(Stage stage) {
@@ -87,6 +100,8 @@ public class Main extends Application {
         FlowPane flowPane = new FlowPane(inputLabel, input, submit);
         flowPane.setHgap(10d);
         VBox root = new VBox(flowPane, result);
+        VBox emptyOutput = generateOutput(0, root);
+        root.getChildren().add(emptyOutput);
         submit.addEventHandler(MouseEvent.MOUSE_CLICKED, _ -> {
             int inputValue;
             try {
@@ -99,8 +114,8 @@ public class Main extends Application {
                 result.setText("Wartość musi mieścić się w zakresie od 3 do 10!");
                 return;
             }
-            root.getChildren().removeIf(child -> child.getId() != null && child.getId().equals(DICE_PANEL_ID));
-            root.getChildren().add(generateOutput(inputValue));
+            removeDices(root);
+            root.getChildren().add(generateOutput(inputValue, root));
         });
         root.setPadding(new Insets(20, 20, 20, 20));
         Scene scene = new Scene(root, 640, 480);
