@@ -2,9 +2,7 @@ package com.example.demo;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -46,31 +44,19 @@ public class Main extends Application {
         diceValues.add(value);
         generateDiceDots(dice, value);
     }
-    public static FlowPane generateOutputGetInner(int diceAmount) {
-        FlowPane innerRow = new FlowPane();
-        innerRow.setHgap(10d);
-        innerRow.setAlignment(Pos.CENTER);
-        GridPane[] dices = new GridPane[diceAmount];
-        for (int i = 0; i < diceAmount; i++) {
+
+    public static final String DICE_PANEL_ID = "OUTER_DICES___ID";
+    public static VBox generateOutput(int diceCount, VBox root) {
+        diceValues.clear();
+        FlowPane row = new FlowPane();
+        for (int i = 0; i < diceCount; i++) {
             GridPane dice = new GridPane();
             dice.setBorder(new Border(new BorderStroke(Color.BLACK,
                     BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
             dice.setPadding(new Insets(5));
-            dices[i] = dice;
+            row.getChildren().add(dice);
             generateInnerDice(dice);
         }
-        innerRow.getChildren().addAll(dices);
-        return innerRow;
-    }
-    public static final String DICE_PANEL_ID = "OUTER_DICES___ID";
-    public static VBox generateOutput(int diceCount, VBox root) {
-        diceValues.clear();
-        int dicesPerRow = diceCount / 2;
-        FlowPane inner1 = generateOutputGetInner(dicesPerRow);
-        FlowPane inner2 = generateOutputGetInner(diceCount - dicesPerRow);
-        FlowPane outer = new FlowPane(inner1, inner2);
-        outer.setOrientation(Orientation.VERTICAL);
-        outer.setVgap(10d);
         totalScore += getScore();
         Label score = new Label("Wynik: " + totalScore);
         Button resetButton = new Button("Resetuj wynik");
@@ -82,7 +68,8 @@ public class Main extends Application {
         });
         HBox scorePanel = new HBox(score, resetButton);
         scorePanel.setSpacing(15);
-        VBox dicesWithScore = new VBox(outer, scorePanel);
+        VBox dicesWithScore = new VBox(row, scorePanel);
+        dicesWithScore.setAlignment(Pos.CENTER);
         scorePanel.setAlignment(Pos.CENTER_LEFT);
         dicesWithScore.setSpacing(10d);
         dicesWithScore.setId(DICE_PANEL_ID);
